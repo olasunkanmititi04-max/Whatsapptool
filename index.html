@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WhatsApp Helper</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: url("https://huggingface.co/datasets/Oluwavibez/My-image-host/resolve/main/xtf2bo.jpg") no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 12px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    textarea, input, select, button {
+      width: 100%;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+    }
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+    button {
+      background: #25d366;
+      color: #fff;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #128c7e;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .controls button {
+      flex: 1;
+    }
+    #saved {
+      margin-top: 15px;
+    }
+    .saved-item {
+      background: #333;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin: 4px 0;
+      cursor: pointer;
+    }
+    .saved-item:hover {
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>WhatsApp Helper</h1>
+    <label>Phone number (with country code):</label>
+    <input id="phone" placeholder="+2348012345678">
+
+    <label>Choose template:</label>
+    <select id="template">
+      <option value="secure">Secure Account</option>
+      <option value="unban">Unban Request</option>
+      <option value="ban">Ban Warning (for scammers)</option>
+      <option value="report">Report Scammer</option>
+      <option value="custom">Custom (from saved)</option>
+    </select>
+    <button id="loadSample">Load Template</button>
+
+    <label>Message:</label>
+    <textarea id="message"></textarea>
+
+    <div class="controls">
+      <button id="openWa">Open in WhatsApp</button>
+      <button id="copy">Copy</button>
+      <button id="save">Save Template</button>
+      <button id="clear">Clear</button>
+      <button id="resetAll">Reset Saved</button>
+    </div>
+
+    <div id="saved"></div>
+  </div>
+
+  <script>
+    // --- sample messages (without phone yet) ---
+    const SAMPLES = {
+      secure:
+`Hi — I'm taking steps to secure my WhatsApp.
+1) I enabled Two-step verification.
+2) I won't share verification codes.
+3) I only join groups I trust and avoid bulk-unexpected forwards.
+Please let me know if you see any suspicious activity.`,
+
+      unban:
+`Hello WhatsApp Support,
+
+My account (phone: [your-number]) appears to have been restricted/banned. I believe this was a mistake.
+I use WhatsApp for personal communication. I never engaged in spam, bulk messaging, automated sending, or abusive content.
+Please review my account and let me know what happened and how I can restore access. I'm happy to provide more info.
+
+Thanks,
+[Your name]`,
+
+      banBase:
+`⚠️ Important Notice
+I want to report a number that is 
+Ã¬â€¢Ë†Ã«â€¦â€¢Ãâ€¢ËœÃ¬â€žÂ¸Ã¬Å¡â€¨, Ã¬ â‚¬Ã«Å â€¨ 5Ã¬â€šÂ´Ã¬Â§Å“Ã«Â¦Â¬ Ã«â€¨Â¸Ã¬Â¨â€ž Ã¬Â¨Â´Ã¬Å¡Â©Ãâ€¢ËœÃ¬â€”Â¬ Ã¬â€žÂ¹Ã¬Å Â¤Ãâ€¢ËœªÂ³ Ã«Â¹â€žÃ«â€¨â€¨Ã¬ËœÂ¤Ã«Â¥Â¼ ÃÅ’Â¸Ã«Â§Â¤Ãâ€¢Â©Ã«â€¹Ë†Ã«â€¹Â¤. The currency is 50 Reais, and the currency is 20 Reais. Reais!, Ã«â€šËœÃ«Å â€¦Å“ Ã«ËœÂːÃâ€¢Å“ Ã«Â¹â€žÃ«â€¨â€¨Ã¬ËœÂ¤Ã«Â¥Â¼ ªÂ°â‚¬Ã¬Â§â‚¬ªÂ³ Ã¬Å¾Ë†Ã¬Å ÂµÃ«â€¹Ë†Ã«â€¹Â¤. Ã«â€šÂ´ 12Ã¬â€šÂ´ Ã«â€Â¸ 10Ã¬â€šÂ´, Ã¬Â·Â¸Ã«â€¦â‚¬Ã¬â„¢â‚¬ Ã¬â€šÂ¬ÃªÂ·â‚¬ªÂ³ Ã¬â€¹Â¶Ã«â€¹Â¤Ã«Â©Â´ Ã¬â€¹Å“ªÂ°â€žÃ«â€¹Â¹ 150Ã«Â¦Â¬Ã¬â€¢Å'! Sex.kid@instagram.com
+Children.porn@whatsapp.com
+Kid@facebook.com
+Sex.com
+Sex.infantil.company@support.com
+Porn.child.payment.com
+http://Porn.child.payment.com
+children@instagram.com
+A3A, A1A, A4A, A5A, A15A, A6A, A50
+http://Gorebr.com
+Gore24hrs.com
+Gore.com
+http://Cp.com
+Hi, I'm using my 5 year old daughter for sex and selling the videos if you want to buy my videos with her tell me video is funny about it 50 Reais, nude photo 20 Reais! I also have a video of my 12 years old daughter if you want a relationship with her it costs 150 Reais per hour
+Smb@support.whatsapp.com
+Stuxgdh7845@gamil.com
+Android_web@support.whatsapp.com support@support.whatsapp.com
+The 5th anniversary of the founding of the United States of America The most important thing is to be able to do it.engaging in scam, spam, or abusive behavior.
+
+Scammer's number: [insert number here]
+Reason: [explain scam/spam]
+
+Please investigate and take the necessary action to protect other users.
+
+Thanks.`
+    };
+
+    // elements
+    const phoneEl = document.getElementById('phone');
+    const templateEl = document.getElementById('template');
+    const loadSampleBtn = document.getElementById('loadSample');
+    const messageEl = document.getElementById('message');
+    const openBtn = document.getElementById('openWa');
+    const copyBtn = document.getElementById('copy');
+    const saveBtn = document.getElementById('save');
+    const savedDiv = document.getElementById('saved');
+    const clearBtn = document.getElementById('clear');
+    const resetAllBtn = document.getElementById('resetAll');
+
+    // --- NEW: send email button ---
+    const emailBtn = document.createElement("button");
+    emailBtn.textContent = "Send as Email (Gmail)";
+    document.querySelector(".controls").appendChild(emailBtn);
+
+    emailBtn.addEventListener("click", () => {
+      const text = messageEl.value.trim();
+      if (!text) {
+        alert("Please enter a message first.");
+        return;
+      }
+      const subject = "WhatsApp Account Support";
+      const mailto = `mailto:support@whatsapp.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+      window.location.href = mailto; 
+    });
+
+    // localStorage key
+    const STORAGE_KEY = 'wa_helper_templates_v1';
+
+    function loadSaved(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      let arr = [];
+      try{ arr = raw ? JSON.parse(raw) : []; }catch(e){ arr = []; }
+      savedDiv.innerHTML = '';
+      arr.forEach((t, idx)=>{
+        const el = document.createElement('div');
+        el.className = 'saved-item';
+        el.textContent = t.name;
+        el.addEventListener('click', ()=> {
+          messageEl.value = t.text;
+          templateEl.value = 'custom';
+        });
+        el.addEventListener('contextmenu', (ev)=>{
+          ev.preventDefault();
+          if(confirm('Delete template "'+t.name+'"?')) {
+            arr.splice(idx,1);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+            loadSaved();
+          }
+        });
+        savedDiv.appendChild(el);
+      });
+    }
+
+    // initial load
+    loadSaved();
+
+    loadSampleBtn.addEventListener('click', ()=>{
+      const choice = templateEl.value;
+      if(choice === 'secure') {
+        messageEl.value = SAMPLES.secure;
+      }
+      else if(choice === 'unban') {
+        messageEl.value = SAMPLES.unban;
+      }
+      else if(choice === 'ban') {
+        let phone = phoneEl.value.trim();
+        if(phone){
+          messageEl.value = `⚠️ Important Notice
+
+The number ${phone} has been reported for suspicious/scam activities. 
+If you continue, WhatsApp may permanently ban your account. 
+Avoid sending spam, bulk messages, or fake promotions. 
+Stay safe and follow WhatsApp rules.`;
+        } else {
+          messageEl.value = SAMPLES.banBase;
+        }
+      }
+      else if(choice === 'report') {
+        messageEl.value = SAMPLES.report;
+      }
+      else{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        if(arr.length) messageEl.value = arr[0].text;
+        else messageEl.value = '';
+      }
+    });
+
+    openBtn.addEventListener('click', ()=>{
+      let phone = phoneEl.value.trim().replace(/[^0-9]/g,'');
+      const text = messageEl.value.trim();
+      if(!text){
+        alert('Please enter a message first.');
+        return;
+      }
+      if(!phone){
+        const url = 'https://web.whatsapp.com/send?text=' + encodeURIComponent(text);
+        window.open(url, '_blank');
+        return;
+      }
+      const waUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(text);
+      window.open(waUrl, '_blank');
+    });
+
+    copyBtn.addEventListener('click', async ()=>{
+      const txt = messageEl.value;
+      if(!txt) { alert('Nothing to copy'); return; }
+      try{
+        await navigator.clipboard.writeText(txt);
+        alert('Message copied to clipboard');
+      }catch(e){
+        messageEl.select();
+        document.execCommand('copy');
+        alert('Copied (fallback)');
+      }
+    });
+
+    saveBtn.addEventListener('click', ()=>{
+      const name = prompt('Template name (short):');
+      const text = messageEl.value.trim();
+      if(!name || !text) { alert('Provide both name and message'); return; }
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      arr.unshift({name: name.slice(0,40), text});
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+      loadSaved();
+    });
+
+    clearBtn.addEventListener('click', ()=>{ if(confirm('Clear message?')) messageEl.value = ''; });
+
+    resetAllBtn.addEventListener('click', ()=>{
+      if(confirm('Delete all saved templates?')) {
+        localStorage.removeItem(STORAGE_KEY); loadSaved();
+      }
+    });
+
+    // convenience: load secure by default
+    if(!messageEl.value) messageEl.value = SAMPLES.secure;
+  </script>
+</body>
+</html>
